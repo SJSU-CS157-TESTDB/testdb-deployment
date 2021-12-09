@@ -2,29 +2,39 @@
 -- CREATE DATABASE testdb;
 -- USE testdb;
 
-CREATE TABLE User_Permission (
-	permission_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE User_Permissions (
+	permission_id SERIAL NOT NULL,
     name TEXT NOT NULL,
     PRIMARY KEY (permission_id)
 );
 
-CREATE TABLE User_Role (
-	role_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE User_Roles (
+	role_id SERIAL NOT NULL,
     role_name TEXT NOT NULL,
     permissions int NOT NULL,
     PRIMARY KEY (role_id),
     FOREIGN KEY (permissions)
-		References User_Permission (permission_id)
+		References User_Permissions (permission_id)
 );
 
-CREATE TABLE Department (
-	department_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE User_Role_Permissions (
+	role_id INT NOT NULL,
+	permission_id INT NOT NULL,
+	PRIMARY KEY (role_id, permission_id),
+	FOREIGN KEY (role_id)
+		References User_Roles (role_id),
+	FOREIGN KEY (permission_id)
+		References User_Permissions (permission_id)
+);
+
+CREATE TABLE Departments (
+	department_id SERIAL NOT NULL,
     name TEXT NOT NULL,
     PRIMARY KEY (department_id)
 );
 
-CREATE TABLE Site (
-	site_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Sites (
+	site_id SERIAL NOT NULL,
     name TEXT NOT NULL,
     address TEXT NOT NULL,
     city TEXT NOT NULL,
@@ -34,20 +44,20 @@ CREATE TABLE Site (
     PRIMARY KEY (site_id)
 );
 
-CREATE Table Lab (
-	lab_id int NOT NULL AUTO_INCREMENT,
+CREATE Table Labs (
+	lab_id SERIAL NOT NULL,
     name TEXT NOT NULL,
     department int NOT NULL,
     site int NOT NULL,
     PRIMARY KEY (lab_id),
     FOREIGN KEY (department)
-		REFERENCES Department (department_id),
+		REFERENCES Departments (department_id),
 	FOREIGN KEY (site)
-		REFERENCES Site (site_id)
+		REFERENCES Sites (site_id)
 );
 
-CREATE TABLE User (
-	user_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Users (
+	user_id SERIAL NOT NULL,
     employee_id int NOT NULL,
     name TEXT NOT NULL,
     password TEXT NOT NULL,
@@ -55,23 +65,23 @@ CREATE TABLE User (
     department int NOT NULL,
 	PRIMARY KEY (user_id),
 	FOREIGN KEY (role)
-		REFERENCES User_Role (role_id),
+		REFERENCES User_Roles (role_id),
 	FOREIGN KEY (department)
-		REFERENCES Department (department_id)
+		REFERENCES Departments (department_id)
 	);
     
-CREATE TABLE Test_Standard (
-	standard_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Test_Standards (
+	standard_id SERIAL NOT NULL,
     name TEXT NOT NULL,
     region TEXT NOT NULL,
     standard_owner int NOT NULL,
     PRIMARY KEY (standard_id),
     FOREIGN KEY (standard_owner)
-		REFERENCES User (user_id)
+		REFERENCES Users (user_id)
 	);
     
-CREATE TABLE Client (
-	client_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Clients (
+	client_id SERIAL NOT NULL,
 	name TEXT NOT NULL,
 	contact_name TEXT NOT NULL,
 	address TEXT NOT NULL,
@@ -82,29 +92,29 @@ CREATE TABLE Client (
 	PRIMARY KEY (client_id)
 );
 
-CREATE TABLE Project (
-	project_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Projects (
+	project_id SERIAL NOT NULL,
 	project_name TEXT NOT NULL,
 	client int NOT NULL,
 	PRIMARY KEY (project_id),
 	FOREIGN KEY (client)
-		REFERENCES Client (client_id)
+		REFERENCES Clients (client_id)
     );
  
     
-CREATE TABLE Work_Order (
-	order_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Work_Orders (
+	order_id SERIAL NOT NULL,
 	project int NOT NULL,
 	quoted_hours int,
 	worked_hours int NOT NULL,
 	completion_date_estimate TEXT NOT NULL,
 	PRIMARY KEY (order_id),
 	FOREIGN KEY (project)
-		REFERENCES Project (project_id)
+		REFERENCES Projects (project_id)
     );
 
-CREATE TABLE Task (
-	task_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Tasks (
+	task_id SERIAL NOT NULL,
 	name TEXT NOT NULL,
 	order_id int NOT NULL,
 	status TEXT NOT NULL,
@@ -112,13 +122,13 @@ CREATE TABLE Task (
 	standard int NOT NULL,
 	PRIMARY KEY (task_id),
 	FOREIGN KEY (order_id)
-		REFERENCES Work_Order (order_id),
+		REFERENCES Work_Orders (order_id),
 	FOREIGN KEY (standard)
-		REFERENCES User (user_id)
+		REFERENCES Users (user_id)
     );
     
-CREATE TABLE Test (
-	test_id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Tests (
+	test_id SERIAL NOT NULL,
     task_id int NOT NULL,
     tester int NOT NULL,
     lab int NOT NULL,
@@ -126,31 +136,25 @@ CREATE TABLE Test (
     test_result TEXT NOT NULL,
     PRIMARY KEY (test_id),
     FOREIGN KEY (task_id)
-		REFERENCES Task (task_id),
+		REFERENCES Tasks (task_id),
     FOREIGN KEY (tester)
-		REFERENCES User (user_id),
+		REFERENCES Users (user_id),
 	FOREIGN KEY (lab)
-		REFERENCES Lab (lab_id)
+		REFERENCES Labs (lab_id)
 );
 
 CREATE TABLE Test_Data (
-	testdata_id int NOT NULL AUTO_INCREMENT,
+	testdata_id SERIAL NOT NULL,
     test int NOT NULL,
     type TEXT NOT NULL,
     data TEXT NOT NULL,
     PRIMARY KEY (testdata_id),
     FOREIGN KEY (test)
-		REFERENCES Test (test_id)
+		REFERENCES Tests (test_id)
 );
 
--- views
+-- Constraint added in post due to dependency paradox
+ALTER TABLE Tasks ADD CONSTRAINT FK_Tasks_Tests
+	FOREIGN KEY (selected_fullfillment)
+		REFERENCES Tests (test_id);
 
-CREATE VIEW [Work Orders Over Budget] AS
-	SELECT
-	Project.project_name,
-	Orders.order_id,
-	Orders.quoted_hours,
-	Orders.worked_hours,
-	FROM Work_Order
-	INNER JOIN Project ON Work_Order.project=Project.project_id
-	WHERE Orders.worked_hours > Orders.quoted_hours;
