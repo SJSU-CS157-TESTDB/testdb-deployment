@@ -5,4 +5,4 @@ ENV POSTGRES_USER postgres
 ENV POSTGRES_PASSWORD .
 
 
-COPY ./scripts/*.sql /docker-entrypoint-initdb.d/
+COPY scripts/testdb-populate-dummy-data.sql /docker-entrypoint-initdb.d/
