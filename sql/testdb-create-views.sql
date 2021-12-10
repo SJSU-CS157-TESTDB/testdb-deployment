@@ -25,6 +25,7 @@ CREATE VIEW "Work Orders Over Budget" AS
 CREATE VIEW "Unreviewed Test Data" AS
 	SELECT
 	Tasks.task_id,
+	Tasks.task_name,
 	Projects.project_name,
 	Tasks.order_id,
 	Tasks.name
