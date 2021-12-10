@@ -11,7 +11,7 @@ CREATE TABLE User_Permissions (
 CREATE TABLE User_Roles (
 	role_id SERIAL NOT NULL,
     role_name TEXT NOT NULL,
-    PRIMARY KEY (role_id),
+    PRIMARY KEY (role_id)
 );
 
 CREATE TABLE User_Role_Permissions (
@@ -121,7 +121,7 @@ CREATE TABLE Tasks (
 	FOREIGN KEY (order_id)
 		REFERENCES Work_Orders (order_id),
 	FOREIGN KEY (standard)
-		REFERENCES Users (user_id)
+		REFERENCES Test_Standards (standard_id)
     );
     
 CREATE TABLE Tests (
